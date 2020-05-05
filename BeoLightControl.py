@@ -116,10 +116,6 @@ class BeoLightControl:
         if event_key == "Up" or  event_key == "Down":
             self.change_brightness(event_key, key_press)
 
-    ###########################################
-    # Setup
-    ###########################################
-
     def product_select(self, message):
         selection = 0
 
@@ -185,8 +181,6 @@ class BeoLightControl:
         return input("")
 
     def listner(self):
-        # TODO Handle if BeoDevice is reboot or lost on network.
-
         last_id = "0"
         while True:
             try:
@@ -210,6 +204,7 @@ class BeoLightControl:
                             last_id = str(new_event['notification']['id'])
                 time.sleep(0.05)
             except:
+                last_id = "0"
                 print ("Problem with connection to the product! Error: " + str(sys.exc_info()[0]) + "... retry in 5 sec.")
                 time.sleep(5)
                         
@@ -317,7 +312,6 @@ class BeoLightControl:
         x = Thread()
 
         while True:
-
             _= system('clear')
             print ("Setting up for product: " + self.devices_discovered[self.beo_device_ip])
             val = input("\nWhat do you want to do?\n1: Select Light or Group\n2: Start/Stop listner\n3: Quit\n")
@@ -390,7 +384,6 @@ class BeoLightControl:
         # Print New Line on Complete
         if iteration == total: 
             print()
-
 
 
 beoLightControl = BeoLightControl()
