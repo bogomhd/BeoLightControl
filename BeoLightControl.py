@@ -142,7 +142,7 @@ class BeoLightControl:
 
         return list(product_list[selection].keys())[0]
 
-    def group_select(self) -> str:
+    def group_select(self):
         _ = system('clear')
 
         print ("Please select which group:")
@@ -161,7 +161,7 @@ class BeoLightControl:
 
         return input("")
 
-    def light_select(self) -> str:
+    def light_select(self):
         _= system('clear')
 
         print ("Please select which group:")
