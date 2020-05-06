@@ -48,7 +48,7 @@ Now the program is listning for light events from your Bang & Olufsen product. G
 2. Press "Select" when "Light" entry is selected
 3. Now it says light in the display. 
 4. Use select to turn on/off the configured light.
-5. Use up/down navigation keys to increase/decrease brightness
+5. Use up/down navigation keys (⌃ or ⌄) to increase/decrease brightness
 
 NB: The Philips Hue system is not that fast! So if do key presses fast the bridge will buffer those requests and execute them when it can!
 
