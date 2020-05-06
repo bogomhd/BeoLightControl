@@ -22,8 +22,8 @@ sudo pip3 install zeroconf requests pyyaml
 ```
 (Other packages might be needed depending on the OS default)
 
-### Get BeoLight Control
-In terminal type:
+### Get BeoLightControl
+To get BeoLightControl open the terminal and type:
 ```
 git clone https://github.com/bogomhd/BeoLightControl
 ```
