@@ -15,12 +15,22 @@ Follow instructions on: https://www.raspberrypi.org/downloads/
 (You might need to enable SSH and VLC if remote access is needed)
 
 ### Install pip3 and packages
+In terminal type:
 ```
 sudo apt install python3-pip
 sudo pip3 install zeroconf requests pyyaml
 ```
 (Other packages might be needed depending on the OS default)
 
+### Get BeoLight Control
+In terminal type:
+```
+git clone https://github.com/bogomhd/BeoLightControl
+```
+To update later on go to the BeoLightControl directory in the terminal and type:
+```
+git pull
+```
 
 ## Usage
 
