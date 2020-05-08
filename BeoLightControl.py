@@ -221,7 +221,7 @@ class BeoLightControl:
         ServiceBrowser(zeroconf, service, self)
         try:
             print ("Updating list of devices in the network...")
-            l = 25
+            l = 50
 
             # Initial call to print 0% progress
             self.printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50, autosize=True)
