@@ -76,36 +76,27 @@ class BeoLightControl:
 
     def change_brightness(self, event_key: str, key_press: bool):
 
-        if not key_press:
-            return # For now.. until I make continues
-
-        dump = {}
-        response = requests.get(self.conn_data.hue_id_url, headers=headers)
-        if response.status_code == 200:
-            dump = json.loads(response.content.decode('utf-8'))
-        else:
-            print ("Something went wrong http status code: " + response.status_code)
-            return
-
-        if not bool(dump[self.conn_data.hue_control_url]['on']):
-            print ("Light not turned on! No need to change brightness!")
-            return
-
-        current_level = dump[self.conn_data.hue_control_url]['bri']
-        new_level = 0
-        if event_key == "Down":
-            if current_level >= brightness_steps:
-                new_level = current_level - brightness_steps
+        if key_press:
+            dump = {}
+            response = requests.get(self.conn_data.hue_id_url, headers=headers)
+            if response.status_code == 200:
+                dump = json.loads(response.content.decode('utf-8'))
             else:
-                new_level = 0    
-        else:
-            if current_level <= (254 - brightness_steps):
-                new_level = current_level + brightness_steps
-            else:
-                new_level = 254
+                print ("Something went wrong http status code: " + response.status_code)
+                return
 
-        #print ("Brightness: " + str(current_level) + " -> " + str(new_level))
-        data = '{"bri":'+ str(new_level) + '}'
+            if not bool(dump[self.conn_data.hue_control_url]['on']):
+                print ("Light not turned on! No need to change brightness!")
+                return
+
+            if event_key == "Down":
+                data = '{"bri_inc":-254,"transitiontime":30}'
+            else:
+                data = '{"bri_inc":254,"transitiontime":30}'
+
+        else:
+            data = '{"bri_inc":0}'
+
         requests.put(self.conn_data.hue_control_url_full, headers=headers, data=data)
 
     def handle_event(self, event_key: str, key_press: bool):
@@ -277,7 +268,7 @@ class BeoLightControl:
                 if response.status_code == 200:
                     dump = json.loads(response.content.decode('utf-8'))[0]
                     if 'error' in dump:
-                        input("Please press the button on the Philips Hue Bridge and afterwards press any key\n")
+                        input("Please press the button on the Philips Hue Bridge and press enter\n")
                     else:
                         print ("Connected to Philips Hue Bridge successfully!")
                         self.hue_api_token = dump['success']['username']
