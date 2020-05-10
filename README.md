@@ -38,8 +38,9 @@ git pull
 1. Open directory in terminal
 2. Enter './BeoLightControl.py'
 3. Follow the steps presented until you reach the "What do you want to do?" menu.
-4. Enter '1' for "Select Light or Group" and follow the setup process.
-5. When back in the "What do you want to do?" menu enter '2' and start the lisnter.
+3. Enter '1' for "Select product" and follow the setup process.
+4. Enter '2' for "Select Light or Group" and follow the setup process.
+5. Enter '3' and start the lisnter.
 
 Now the program is listning for light events from your Bang & Olufsen product. Give it a go with the remote connected to the product.
 
