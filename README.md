@@ -12,7 +12,7 @@ I use this program with a raspberry pi. But it could be used with any linux mach
 ### Install Raspbian 
 Follow instructions on: https://www.raspberrypi.org/downloads/
 
-(You might need to enable SSH and VLC if remote access is needed)
+(You might need to enable SSH and VNC if remote access is needed)
 
 ### Install pip3 and packages
 In terminal type:
