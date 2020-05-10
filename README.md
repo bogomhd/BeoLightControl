@@ -12,7 +12,7 @@ I use this program with a raspberry pi. But it could be used with any linux mach
 ### Install Raspbian 
 Follow instructions on: https://www.raspberrypi.org/downloads/
 
-(You might need to enable SSH and VLC if remote access is needed)
+(You might need to enable SSH and VNC if remote access is needed)
 
 ### Install pip3 and packages
 In terminal type:
@@ -47,8 +47,8 @@ Now the program is listning for light events from your Bang & Olufsen product. G
 1. Press list on the remote and navigate to the "Light" entry
 2. Press "Select" when "Light" entry is selected
 3. Now it says light in the display. 
-4. Use select to turn on/off the configured light.
-5. Use up/down navigation keys (⌃ or ⌄) to increase/decrease brightness
+4. Press select to turn on/off the configured light.
+5. Press and hold up/down navigation keys (⌃ or ⌄) to increase/decrease brightness.
 
 NB: The Philips Hue system is not that fast! So if do key presses fast the bridge will buffer those requests and execute them when it can!
 
