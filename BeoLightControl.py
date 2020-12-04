@@ -14,8 +14,10 @@ import ipaddress
 import http.client
 configuration_file = "BeoLightControl.yaml"
 config_hue_bridge = "Hue bridge"
-config_hue_ip = "ip"
 config_hue_token = "token"
+config_product = "Beo product"
+config_product_name = "name"
+config_ip = "ip"
 
 headers = {"Content-Type": "application/json"}
 
@@ -240,61 +242,81 @@ class BeoLightControl:
         self.discover_devices("_beoremote._tcp.local.")
         self.beo_device_ip = self.product_select("Please select which product you want to configure:")
         self.beo_device_name = self.devices_discovered[self.beo_device_ip]
-        print ("BeoDeviceIP: " + self.beo_device_ip)
+
+        config = None
+        with open(configuration_file) as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+        
+        config[config_product] = {config_product_name: self.beo_device_name, config_ip: self.beo_device_ip}
+        with open(configuration_file, "w") as file:
+            yaml.dump(config, file)
 
     def generate_hue_urls(self):
         self.hue_api_url_base = "http://" + self.hue_api_ip + "/api/" + self.hue_api_token + "/"
         self.hue_api_url_groups = self.hue_api_url_base + "groups"
         self.hue_api_url_light = self.hue_api_url_base + "lights"
 
-    def setup_or_load_hue_config(self):
+    def load_stored_config(self):
         conf_file_exsists = path.exists(configuration_file)
         #print ("conf file exsists: " + str(conf_file_exsists))
         if conf_file_exsists:
             #Load data
             with open(configuration_file) as file:
-                config = yaml.load(file, Loader=yaml.FullLoader)[0]
-                if config_hue_ip in config[config_hue_bridge]:
-                    self.hue_api_ip = config[config_hue_bridge][config_hue_ip]
+                config = yaml.load(file, Loader=yaml.FullLoader)
+                if config_ip in config[config_hue_bridge]:
+                    self.hue_api_ip = config[config_hue_bridge][config_ip]
                 else:
                     print ("Error with ip in config file")
-                    return
+                    return False
 
                 if config_hue_token in config[config_hue_bridge]:
                     self.hue_api_token = config[config_hue_bridge][config_hue_token]
                 else:
                     print ("Error with token in config file")
-                    return
-                
-        else: 
-            self.select_hue_bridge()
-            data = '{"devicetype":"BeoLightControl"}'
+                    return False
 
-            button_pressed = False
-            while not button_pressed:
-                response = requests.post("http://" + self.hue_api_ip + "/api", headers=headers, data=data)
-                if response.status_code == 200:
-                    dump = json.loads(response.content.decode('utf-8'))[0]
-                    if 'error' in dump:
-                        input("Please press the button on the Philips Hue Bridge and press enter\n")
-                    else:
-                        print ("Connected to Philips Hue Bridge successfully!")
-                        self.hue_api_token = dump['success']['username']
-                        time.sleep(3)
-                        button_pressed = True
-                else:
-                    print ("Error! HTTP Connection error code: " + response.status_code)
-            
-            if self.hue_api_token == "":
-                print ("Error! No Hue token")
-                return
-
-            dict_file = [{config_hue_bridge : {config_hue_ip : self.hue_api_ip, config_hue_token : self.hue_api_token}}]
-
-            with open(configuration_file, "w") as file:
-                 yaml.dump(dict_file, file)
+                if config_product in config:
+                    if config_product_name in config[config_product]:
+                        self.beo_device_name = config[config_product][config_product_name]
+                    
+                    if config_ip in config[config_product]:
+                        self.beo_device_ip = config[config_product][config_ip]
+                    
+        else:
+            return False
         
-        self.generate_hue_urls()
+        return True
+
+    def setup_hue_config(self):
+
+        self.select_hue_bridge()
+        data = '{"devicetype":"BeoLightControl"}'
+
+        button_pressed = False
+        while not button_pressed:
+            response = requests.post("http://" + self.hue_api_ip + "/api", headers=headers, data=data)
+            if response.status_code == 200:
+                dump = json.loads(response.content.decode('utf-8'))[0]
+                if 'error' in dump:
+                    input("Please press the button on the Philips Hue Bridge and press enter\n")
+                else:
+                    print ("Connected to Philips Hue Bridge successfully!")
+                    self.hue_api_token = dump['success']['username']
+                    time.sleep(3)
+                    button_pressed = True
+            else:
+                print ("Error! HTTP Connection error code: " + response.status_code)
+        
+        if self.hue_api_token == "":
+            print ("Error! No Hue token")
+            return
+
+        dict_file = [{config_hue_bridge : {config_ip : self.hue_api_ip, config_hue_token : self.hue_api_token}}]
+
+        with open(configuration_file, "w") as file:
+                yaml.dump(dict_file, file)
+        
+
 
     def stop_lister(self):
         if self.listner_thread:
@@ -305,7 +327,10 @@ class BeoLightControl:
 
     def start(self):
 
-        self.setup_or_load_hue_config()
+        if not self.load_stored_config():
+            self.setup_hue_config()
+
+        self.generate_hue_urls()
 
         #print ("IP: " + self.hue_api_ip + " Token: " + self.hue_api_token)
         _= system('clear')
