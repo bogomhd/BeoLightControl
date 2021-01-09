@@ -243,7 +243,7 @@ class BeoLightControl:
         self.beo_device_ip = self.product_select("Please select which product you want to configure:")
         self.beo_device_name = self.devices_discovered[self.beo_device_ip]
 
-        config = None
+        config = {}
         with open(configuration_file) as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
         
@@ -311,7 +311,7 @@ class BeoLightControl:
             print ("Error! No Hue token")
             return
 
-        dict_file = [{config_hue_bridge : {config_ip : self.hue_api_ip, config_hue_token : self.hue_api_token}}]
+        dict_file = {config_hue_bridge : {config_ip : self.hue_api_ip, config_hue_token : self.hue_api_token}}
 
         with open(configuration_file, "w") as file:
                 yaml.dump(dict_file, file)
