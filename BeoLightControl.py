@@ -17,6 +17,9 @@ config_hue_bridge = "Hue bridge"
 config_hue_token = "token"
 config_product = "Beo product"
 config_product_name = "name"
+config_light = "Light"
+config_light_url = "light_url"
+config_light_control_url = "control_url"
 config_ip = "ip"
 
 headers = {"Content-Type": "application/json"}
@@ -25,17 +28,16 @@ brightness_steps = 20
 
 class ConnectionData:
 
-    def __init__(self, hue_api_url_base, hue_api_url_light, hue_control_url, hue_id, beo_device_ip, beo_device_name):
+    def __init__(self, hue_api_url_light, hue_control_url, beo_device_ip, beo_device_name):
         # http://192.168.195.141/api/*token*/lights/12
         # http://192.168.195.141/api/*token*/groups/1/
-        self.hue_id = hue_id
-        self.hue_id_url = hue_api_url_base + hue_api_url_light + "/" + hue_id
+        self.hue_id_url = hue_api_url_light
 
         self.hue_control_url = hue_control_url
 
         # http://192.168.195.141/api/*token*/lights/12/state
         # http://192.168.195.141/api/*token*/groups/1/action
-        self.hue_control_url_full = hue_api_url_base + hue_api_url_light + "/" + hue_id + "/" + hue_control_url
+        self.hue_control_url_full = hue_api_url_light + "/" + hue_control_url
         self.beo_notifications_url = 'http://' + beo_device_ip + ":8080/BeoNotify/Notifications?lastId="
 
         self.beo_device_ip = beo_device_ip
@@ -59,8 +61,9 @@ class BeoLightControl:
         self.hue_api_url_groups = ""
         self.hue_api_url_light = ""
         self.hue_api_token = ""
-        self.hue_id = ""
         self.hue_light_name = ""
+        self.hue_api_url_selected_light = ""
+        self.hue_control_path = ""
 
         self.listner_thread = None
 
@@ -157,8 +160,7 @@ class BeoLightControl:
             groups[element] = dump[element]['name']
             print (element + ": " + dump[element]['name'])
 
-        selection = input("")
-        return selection, dump[selection]['name']
+        return input("")
 
     def light_select(self):
         _= system('clear')
@@ -177,8 +179,29 @@ class BeoLightControl:
             lights[element] = dump[element]['name']
             print (element + ": " + dump[element]['name'])
 
-        selection = input("")
-        return selection, dump[selection]['name']
+        return input("")
+
+    def get_light_name(self):
+        if self.hue_api_url_selected_light:
+
+            response = requests.get(self.hue_api_url_selected_light, headers=headers)
+            if response.status_code == 200:
+                dump = json.loads(response.content.decode('utf-8'))
+            else:
+                return ""
+
+            return dump['name']
+        else:
+            return ""
+
+    def store_light_data(self):
+        config = {}
+        with open(configuration_file) as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+
+        config[config_light] = {config_light_url: self.hue_api_url_selected_light, config_light_control_url: self.hue_control_path}
+        with open(configuration_file, "w") as file:
+            yaml.dump(config, file)
 
     def listner(self):
         last_id = "0"
@@ -278,17 +301,20 @@ class BeoLightControl:
                 if config_product in config:
                     if config_product_name in config[config_product]:
                         self.beo_device_name = config[config_product][config_product_name]
-                    
+
                     if config_ip in config[config_product]:
                         self.beo_device_ip = config[config_product][config_ip]
-                    
+
+                if config_light in config:
+                    if config_light_control_url in config[config_light] and config_light_url in config[config_light]:
+                        self.hue_api_url_selected_light = config[config_light][config_light_url]
+                        self.hue_control_path = config[config_light][config_light_control_url]
         else:
             return False
         
         return True
 
     def setup_hue_config(self):
-
         self.select_hue_bridge()
         data = '{"devicetype":"BeoLightControl"}'
 
@@ -315,8 +341,6 @@ class BeoLightControl:
 
         with open(configuration_file, "w") as file:
                 yaml.dump(dict_file, file)
-        
-
 
     def stop_lister(self):
         if self.listner_thread:
@@ -335,13 +359,9 @@ class BeoLightControl:
         #print ("IP: " + self.hue_api_ip + " Token: " + self.hue_api_token)
         _= system('clear')
              
-        hue_control_path = ""
-        hue_api_url_light = ""
-
-
         while True:
             _= system('clear')
-            print ("Current settings:\nProduct: " + self.beo_device_name + "\nLight/Group: " + self.hue_light_name)
+            print ("Current settings:\nProduct: " + self.beo_device_name + "\nLight/Group: " + self.get_light_name())
             val = input("\nWhat do you want to do?\n1: Select product\n2: Select Light or Group\n3: Start/Stop listner\n4: Quit\n")
 
             if val == "1":
@@ -353,15 +373,14 @@ class BeoLightControl:
                 val = input("What to you want to control?\n1: Light\n2: Group\n") 
 
                 if val == "1":
-                    hue_control_path = "state"
-                    hue_api_url_light = "lights"
+                    self.hue_control_path = "state"
+                    self.hue_api_url_selected_light = self.hue_api_url_light + "/" + self.light_select()
 
-                    self.hue_id, self.hue_light_name = self.light_select()
                 else:
-                    hue_control_path = "action"
-                    hue_api_url_light = "groups"
+                    self.hue_control_path = "action"
+                    self.hue_api_url_selected_light = self.hue_api_url_groups + "/" + self.group_select()
 
-                    self.hue_id, self.hue_light_name = self.group_select()
+                self.store_light_data()
 
                 _ = system('clear')
                     
@@ -369,17 +388,20 @@ class BeoLightControl:
                 _= system('clear')
                 val = input("Do you want to start or stop the listner?\n1: Start\n2: Stop\n")
                 if val == "1":
-                    self.conn_data = ConnectionData(self.hue_api_url_base, hue_api_url_light, hue_control_path, self.hue_id, self.beo_device_ip, self.beo_device_name)
-                    try:
-                        self.listner_thread = Thread(target=self.listner)
-                        
-                    except:
-                        print ("ERROR!")
+                    if self.hue_api_url_selected_light:
+                        self.conn_data = ConnectionData(self.hue_api_url_selected_light, self.hue_control_path, self.beo_device_ip, self.beo_device_name)
+                        try:
+                            self.listner_thread = Thread(target=self.listner)
+                        except:
+                            print ("ERROR!")
 
-                    print ("Started to listen to events from " + self.beo_device_ip)
+                        print ("Started to listen to events from " + self.beo_device_ip)
 
-                    self.listner_thread.start()
-                    time.sleep(5)
+                        self.listner_thread.start()
+                        time.sleep(5)
+                    else:
+                        print ("No light selected! Don't start listner!")
+                        time.sleep(5)
                 else:
                     self.stop_lister()
                     _= system('clear')
