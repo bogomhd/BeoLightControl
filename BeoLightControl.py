@@ -5,6 +5,7 @@ import requests
 import time
 import sys
 import shutil
+import signal
 from os import system, path
 from threading import Thread
 
@@ -66,6 +67,9 @@ class BeoLightControl:
         self.hue_control_path = ""
 
         self.listner_thread = None
+
+        signal.signal(signal.SIGTERM, self.signal_handler)
+        signal.signal(signal.SIGINT, self.signal_handler)
 
     def toggle_light(self):
         dump = {}
@@ -342,23 +346,28 @@ class BeoLightControl:
         with open(configuration_file, "w") as file:
                 yaml.dump(dict_file, file)
 
-    def stop_lister(self):
+    def start_listner(self):
+        if self.hue_api_url_selected_light:
+            self.conn_data = ConnectionData(self.hue_api_url_selected_light, self.hue_control_path, self.beo_device_ip, self.beo_device_name)
+            try:
+                self.listner_thread = Thread(target=self.listner)
+            except:
+                print ("ERROR! " + str(sys.exc_info()[0]))
+
+            print ("Started to listen to events from " + self.beo_device_ip)
+
+            self.listner_thread.start()
+        else:
+            print ("No light selected! Don't start listner!")
+
+    def stop_listner(self):
         if self.listner_thread:
             if self.listner_thread.is_alive:
                 self.conn_data.interrupt = True
                 print ("Stopping listner...")
                 self.listner_thread.join()
 
-    def start(self):
-
-        if not self.load_stored_config():
-            self.setup_hue_config()
-
-        self.generate_hue_urls()
-
-        #print ("IP: " + self.hue_api_ip + " Token: " + self.hue_api_token)
-        _= system('clear')
-             
+    def ui(self):
         while True:
             _= system('clear')
             print ("Current settings:\nProduct: " + self.beo_device_name + "\nLight/Group: " + self.get_light_name())
@@ -388,29 +397,40 @@ class BeoLightControl:
                 _= system('clear')
                 val = input("Do you want to start or stop the listner?\n1: Start\n2: Stop\n")
                 if val == "1":
-                    if self.hue_api_url_selected_light:
-                        self.conn_data = ConnectionData(self.hue_api_url_selected_light, self.hue_control_path, self.beo_device_ip, self.beo_device_name)
-                        try:
-                            self.listner_thread = Thread(target=self.listner)
-                        except:
-                            print ("ERROR!")
-
-                        print ("Started to listen to events from " + self.beo_device_ip)
-
-                        self.listner_thread.start()
-                        time.sleep(5)
-                    else:
-                        print ("No light selected! Don't start listner!")
-                        time.sleep(5)
+                    self.start_listner()
+                    time.sleep(5)
                 else:
-                    self.stop_lister()
+                    self.stop_listner()
                     _= system('clear')
                     print ("Listner stopped!")
                     time.sleep(3)
 
             else:
-                self.stop_lister()
-                return        
+                self.stop_listner()
+                return
+
+    def start(self, listner_mode):
+
+        if not self.load_stored_config():
+            self.setup_hue_config()
+
+        self.generate_hue_urls()
+
+        #print ("IP: " + self.hue_api_ip + " Token: " + self.hue_api_token)
+        _= system('clear')
+        
+        if listner_mode:
+            self.start_listner()
+            if self.listner_thread:
+                if self.listner_thread.is_alive:
+                    self.listner_thread.join()
+        else:
+            self.ui()
+
+    def signal_handler(self, signum, frame):
+        print('Signal handler called with signal', signum)
+        self.stop_listner()
+        sys.exit()
 
     # Borrowed from: https://gist.github.com/greenstick/b23e475d2bfdc3a82e34eaa1f6781ee4
     def printProgressBar (self, iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', autosize = False):
@@ -439,5 +459,17 @@ class BeoLightControl:
             print()
 
 
-beoLightControl = BeoLightControl()
-beoLightControl.start()
+if __name__ == '__main__':
+    listner_mode = False
+    beoLightControl = BeoLightControl()
+    if len(sys.argv[1:]) >= 1:
+        if sys.argv[1] == "-l":
+            print ("Run listner mode")
+            listner_mode = True
+        elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
+            print ("Usage: " + sys.argv[0] + " [option] ... [-l]")
+            print ("-h, --help  : This help")
+            print ("-l          : Start lister without setup UI")
+            sys.exit()
+    beoLightControl.start(listner_mode)
+
