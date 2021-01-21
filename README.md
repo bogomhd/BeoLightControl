@@ -40,9 +40,17 @@ git pull
 3. Follow the steps presented until you reach the "What do you want to do?" menu.
 3. Enter '1' for "Select product" and follow the setup process.
 4. Enter '2' for "Select Light or Group" and follow the setup process.
-5. Enter '3' and start the lisnter.
+5. Enter '3' and start the listner.
 
 Now the program is listning for light events from your Bang & Olufsen product. Give it a go with the remote connected to the product.
+
+Alternatively:
+When you have configured with the above steps you can start the listner without going through the cammand line UI.
+Simply write:
+```
+./BeoLightControl.py -l
+```
+Then the listner will launch directly with the saved settings.
 
 ### Remote guide:
 1. Press list on the remote and navigate to the "Light" entry
