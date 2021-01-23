@@ -3,7 +3,7 @@
 A simple program which allow you to control Philips Hue bulbs with a BeoRemote One BT connected to a Bang & Olufsen product. It was made using my spare time and comes with absolutely no warranty.
 
 Should be compatible Bang & Olufsen devices:
-BeoPlay M3, M5, A6, A9, Beosound 1, 2, 35, Stage, Core, Shape, Edge, Beovision Eclipse, Beovision Harmony
+BeoPlay M3, M5, A6, A9, Beosound 1, 2, 35, Stage, Core, Shape, Edge, Beovision Eclipse, Beovision Harmony, Beovision Contour
 
 I use this program with a raspberry pi. But it could be used with any linux machine.
 
